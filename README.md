@@ -8,7 +8,6 @@ On Windows:
 
 * VS2019
 E:\DEV\FixMacroOnClang>mkdir build && cd build
-
 E:\DEV\FixMacroOnClang\build>cmake -G "Visual Studio 16 2019" -A x64 ../
 
 
