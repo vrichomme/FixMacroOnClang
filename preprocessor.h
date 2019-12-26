@@ -20,10 +20,17 @@ _41 ,_42 ,_43 ,_44 ,_45 ,_46 ,_47 ,_48 ,_49 ,_50 ,\
 _51 ,_52 ,_53 ,_54 ,_55 ,_56 ,_57 ,_58 ,_59 ,_60 ,\
 _61 ,_62 ,_63 ,  N , ...) N
 
+
 #define PP_FW(...) (__VA_ARGS__)
 #define PP_NARG_(...) PP_ARG_N PP_FW(__VA_ARGS__)
 #define PP_ARGCOUNT(...) PP_NARG_(__VA_ARGS__,PP_RSEQ_N())
 
+#define PP_BUGFX(x) x
+#define PP_NARG1(...) PP_BUGFX(PP_ARG_N(__VA_ARGS__))
+#define PP_NARG2(...) PP_BUGFX(PP_NARG1(__VA_ARGS__,PP_RSEQ_N()))
+
+
+#if 1
 #define PP_S1(M, v, ...) M(v)
 #define PP_S2(M, v, ...) M(v) PP_S1 PP_FW(M, __VA_ARGS__)
 #define PP_S3(M, v, ...) M(v) PP_S2 PP_FW(M,__VA_ARGS__)
@@ -284,16 +291,45 @@ _61 ,_62 ,_63 ,  N , ...) N
 #define PP_GSC63(M, v, ...) M v, PP_GSC62 PP_FW(M,__VA_ARGS__)
 #define PP_GSC64(M, v, ...) M v, PP_GSC63 PP_FW(M,__VA_ARGS__)
 
-#define PP_PREFIX(Method) PP_##Method
-#define PP_SUFFIX(N) N
-#define PP_ENTRY(Method,N) PP_PREFIX(Method)PP_SUFFIX(N)
-#define PP_CALL_PP_SN( Method, Func, N, ...) PP_ENTRY(Method,N) PP_FW(Func, __VA_ARGS__)
 
+#define PP_BASE_CONCAT(a, ...) a ## __VA_ARGS__
+#define PP_CONCAT(a, ...) PP_BASE_CONCAT(a, __VA_ARGS__)
+#define PP_PREFIX(Method) PP_CONCAT(PP_, Method)
+#define PP_SUFFIX(N) N
+#define PP_ENTRY(Method,N) PP_CONCAT(PP_PREFIX(Method), PP_SUFFIX(N))
+
+
+
+#define EVAL(...)  EVAL1(EVAL1(EVAL1(__VA_ARGS__)))
+#define EVAL1(...) EVAL2(EVAL2(EVAL2(__VA_ARGS__)))
+#define EVAL2(...) EVAL3(EVAL3(EVAL3(__VA_ARGS__)))
+#define EVAL3(...) EVAL4(EVAL4(EVAL4(__VA_ARGS__)))
+#define EVAL4(...) EVAL5(EVAL5(EVAL5(__VA_ARGS__)))
+#define EVAL5(...) __VA_ARGS__
+
+
+#define PP_CALL_PP_SN( Method, Func, N, ...) PP_CALL_PP_SN_( Method, Func, N, __VA_ARGS__)
+#define PP_CALL_PP_SN_( Method, Func, N, ...) PP_ENTRY(Method,N) PP_FW(Func, __VA_ARGS__) 
+ 
 #define PP_FOREACH(Func, ...) PP_CALL_PP_SN( S, Func, PP_ARGCOUNT PP_FW(__VA_ARGS__), __VA_ARGS__ )
 #define PP_FOREACH_ASLIST(Func, ...) PP_CALL_PP_SN( SC, Func, PP_ARGCOUNT PP_FW(__VA_ARGS__), __VA_ARGS__ )
-#define PP_FOREACH_GROUP(Func, ...) PP_CALL_PP_SN( GS, Func, PP_ARGCOUNT PP_FW(__VA_ARGS__), __VA_ARGS__ )
+#define PP_FOREACH_GROUP(Func, ...) EVAL(PP_CALL_PP_SN( GS, Func, PP_ARGCOUNT PP_FW(__VA_ARGS__), __VA_ARGS__ ))
+//#define PP_FOREACH_GROUP(Func, ...) PP_CALL_PP_SN( GS, Func, PP_ARGCOUNT PP_FW(__VA_ARGS__), __VA_ARGS__ )
+//#define PP_FOREACH_GROUP(Func, ...) PP_CALL_PP_SN( GS, Func, PP_BUGFX(PP_NARG2(__VA_ARGS__))) (__VA_ARGS__ )
 #define PP_FOREACH_GROUP_ASLIST(Func, ...) PP_CALL_PP_SN( GSC, Func, PP_ARGCOUNT PP_FW(__VA_ARGS__), __VA_ARGS__ )
+#else
 
+#define PP_BUGFX(x) x
+
+#define PP_NARG2(...) PP_BUGFX(PP_NARG1(__VA_ARGS__,PP_RSEQ_N()))
+#define PP_NARG1(...) PP_BUGFX(PP_ARG_N(__VA_ARGS__))
+
+
+#define PP_GS2(M, v) M v
+#define PP_GS1(M, v) PP_GS2(M, v)
+#define PP_FOREACH_GROUP(Func,...) PP_GS1(Func,PP_BUGFX(PP_NARG2(__VA_ARGS__))) (__VA_ARGS__)
+
+#endif
 
 
 //________________
